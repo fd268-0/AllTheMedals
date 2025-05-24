@@ -1,0 +1,8 @@
+[meta]
+name        = "AllTheMedals"
+author      = "fd268"
+category    = "Testing"
+version     = "0.0.1"
+[script]
+dependencies = [ "NadeoServices" ]
+optional_dependencies = [ "ChampionMedals", "WarriorMedals" ]
