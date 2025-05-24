@@ -181,7 +181,6 @@ array<float> getValues(const array<string> &in lTR, const int lookup) {
 	return {before, after};
 }
 
-// TODO possible crash? maybe? idk
 array<string> subList(const array<string> &in lTR, const int s, const int e) {
 	array<string> list = lTR;
 	int start = s;
@@ -200,7 +199,6 @@ array<string> subList(const array<string> &in lTR, const int s, const int e) {
 	return subCalc;
 }
 
-// TODO fix this because it can cause crashes if for example you have ')*'
 array<string> replaceList(const array<string> &in lTR, const int s, const int e, const string tRW) {
 	array<string> list = lTR;
 	string replacement = tRW;
