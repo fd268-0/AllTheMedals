@@ -131,6 +131,8 @@ int Setting_X = 100;
 [Setting name="Widget Y Position"]
 int Setting_Y = 100;
 
+// nadeo services!!! yay
+
 int getTimeAtPos(const int position) {
 	if (position < 1 || position > 10000) {
 		return 0;
@@ -179,18 +181,41 @@ array<float> getValues(const array<string> &in lTR, const int lookup) {
 	return {before, after};
 }
 
-array<string> subList(const array<string> &in lTR, const int start, const int end) {
+// TODO possible crash? maybe? idk
+array<string> subList(const array<string> &in lTR, const int s, const int e) {
 	array<string> list = lTR;
+	int start = s;
+	int end = e;
 	array<string> subCalc = {};
+	if (start < 0) {
+		end -= start;
+		start = 0;
+	}
+	if (int(end+1) > int(list.Length)) {
+		end = list.Length-1;
+	}
 	for (int i = start; i < end; i++) {
 		subCalc.InsertLast(list[i]);
 	}
 	return subCalc;
 }
 
-array<string> replaceList(const array<string> &in lTR, const int start, const int end, const string tRW) {
+// TODO fix this because it can cause crashes if for example you have ')*'
+array<string> replaceList(const array<string> &in lTR, const int s, const int e, const string tRW) {
 	array<string> list = lTR;
 	string replacement = tRW;
+	int start = s;
+	int end = e;
+	if (start < 0) {
+		end -= start;
+		start = 0;
+	}
+	if (int(start+end+1) > int(list.Length)) {
+		end = list.Length-start;
+	}
+	if (end < 1) {
+		end = 1;
+	}
 	list.RemoveRange(start, end);
 	list.InsertAt(start, replacement);
 	return list;
@@ -236,7 +261,7 @@ float calcText(const array<string> &in toCal) {
 			}
 			if (subbed.Contains("$#")) {
 				string placement = subbed.SubStr(2);
-				if (cachedLBPos.Find(placement) > -1 && cachedLBPos.Find(placement) < int(cachedLBTimes.Length)) {
+				if (cachedLBPos.Find(placement) > -1 && cachedLBPos.Find(placement) < int(cachedLBTimes.Length) && Text::TryParseInt(placement, 0.0)) {
 					replacement = cachedLBTimes[cachedLBPos.Find(placement)];
 				}
 			}
