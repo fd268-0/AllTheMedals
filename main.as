@@ -1,5 +1,3 @@
-
-
 // some random global variables
 
 string lastMap = "";
@@ -323,7 +321,7 @@ array<string> splitText(const string &in toCal) {
 	array<string> split = {};
 	string current = "";
 	bool isEq = false;
-	toCalc.Replace(" ", "");
+	toCalc = toCalc.Replace(" ", "");
 	for (int i = 0; i < int(toCalc.Length); i++) {
 		string byte = toCalc.SubStr(i, 1);
 		// handles negative numbers
@@ -784,10 +782,13 @@ Setting_Show = !Setting_Show;
 				inte = inte + "|";
 			}
 			for(uint j = 0; j < nr[i].Length; j++) {
+				string value = nr[i][j];
+				value = value.Replace("|", "");
+				value = value.Replace(":", "");
 				if (j != 0) {
 					inte = inte + ":";
 				}
-				inte = inte + nr[i][j];
+				inte = inte + value;
 			}
 		}
 
