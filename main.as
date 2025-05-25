@@ -24,6 +24,9 @@ bool enabled = false;
 [Setting name="Show Widget" description="The visibility of the widget in-game." category="General"]
 bool Setting_Show = true;
 
+[Setting name="Show Widget In Game Style" description="Show the widget in the style of the game using NVG." category="General"]
+bool Setting_NVG = false;
+
 [Setting name="Show Track Info" description="The visibility of the track name and author." category="General"]
 bool Setting_TrackNameVis = true;
 
@@ -130,6 +133,13 @@ int Setting_X = 100;
 int Setting_Y = 100;
 
 // nadeo services!!! yay
+
+vec4 formatToVec4(const string inserted) {
+	auto str = inserted.SubStr(2);
+	auto hex = "#" + str.SubStr(0, 1) + "0" + str.SubStr(1, 1) + "0" + str.SubStr(2, 1) + "0";
+	auto color = Text::ParseHexColor(hex);
+	return color;
+}
 
 int getTimeAtPos(const int position) {
 	if (position < 1 || position > 10000) {
@@ -446,16 +456,19 @@ wm_time = WarriorMedals::GetWMTime();
 cm_time = ChampionMedals::GetCMTime();
 #endif
 
+
+
 		auto network = cast<CTrackManiaNetwork>(app.Network);
 
 		UI::SetNextWindowPos(Setting_X,Setting_Y);
-
 		int flags = UI::WindowFlags::NoTitleBar | UI::WindowFlags::NoCollapse | UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoDocking;
 		UI::Begin("m", flags);
 
 		auto pos = UI::GetWindowPos();
-		Setting_X = int(pos.x);
-		Setting_Y = int(pos.y);
+			Setting_X = int(pos.x);
+			Setting_Y = int(pos.y);
+
+
 
 		float besttime = -1;
 		float bestmedal = 0;
@@ -628,6 +641,117 @@ cm_time = ChampionMedals::GetCMTime();
 
 		if (Setting_ShowDelta == true) {
 			cols += 1;
+		}
+
+
+		// nvg render
+		if (Setting_NVG == true) {
+			auto font = nvg::LoadFont("Montserrat-SemiBoldItalic.ttf");
+			nvg::FontFace(font);
+			nvg::FontSize(14);
+
+
+			int am = 0;
+
+			float namemax = 0;
+			float timemax = 0;
+			float deltamax = 0;
+
+			array<string> delta = {};
+
+			for(uint i = 0; i < times.Length; i++) {
+				if (Setting_ShowNonCompleteTimes == false && int(times[i]["Time"]) <= 0) {
+					delta.InsertLast("");
+					continue;
+				}
+				am += 1;
+
+				auto time = (int(times[i]["Time"]) > 0 ? Time::Format(int(times[i]["Time"])) : "-:--.---");
+				if (Setting_ShowTime == true) {
+					auto getBound = nvg::TextBounds(time);
+					if (getBound.x+8 > timemax) {
+						timemax = getBound.x+8;
+					}
+				}
+
+				if (Setting_ShowName == true) {
+					auto getBound2 = nvg::TextBounds(Text::StripOpenplanetFormatCodes(string(times[i]["Name"])));
+					if (getBound2.x+8 > namemax) {
+						namemax = getBound2.x+8;
+					}
+				}
+
+				int tde = (int(besttime)-int(times[i]["Time"]));
+				if (tde != 0) {
+					if (tde > 0) {
+						delta.InsertLast("+" + (int(times[i]["Time"]) > 0 ? Time::Format(tde) : "-:--.---"));
+					} else {
+						delta.InsertLast("" + (int(times[i]["Time"]) > 0 ? Time::Format(tde) : "-:--.---"));
+					}
+				} else {
+					delta.InsertLast("");
+				}
+				if (Setting_ShowDelta == true) {
+					auto getBound3 = nvg::TextBounds(Text::StripFormatCodes(delta[i]));
+					if (getBound3.x+8 > deltamax) {
+						deltamax = getBound3.x+8;
+					}
+				}
+			}
+
+			int t = am*16;
+			am = -1;
+
+			float ypos = Setting_Y;
+			ypos += UI::GetWindowSize().y+15;
+
+			float xpos = Setting_X;
+			xpos += 20;
+
+			nvg::BeginPath();
+			nvg::Rect(xpos-8, ypos-20, namemax+timemax+deltamax+16+20, t+16);
+			nvg::FillColor(vec4(0,0,0,0.85));
+			nvg::Fill();
+			nvg::ClosePath();
+			nvg::FillColor(vec4(1,1,1,1));
+			for(uint i = 0; i < times.Length; i++) {
+				if (Setting_ShowNonCompleteTimes == false && int(times[i]["Time"]) <= 0) {
+					continue;
+				}
+				am += 1;
+				auto time = (int(times[i]["Time"]) > 0 ? Time::Format(int(times[i]["Time"])) : "-:--.---");
+				nvg::FillColor(formatToVec4(string(times[i]["Color"])));
+				if (Setting_ShowMedal == true) {
+					nvg::Text(xpos, ypos+(am*16), Icons::Circle);
+				}
+
+				nvg::FillColor(vec4(1,1,1,1));
+
+				if (delta[i] == "") {
+					nvg::FillColor(vec4(0,1,1,1));
+				}
+				if (Setting_ShowTime == true) {
+					nvg::Text(xpos+20+namemax+8, ypos+(am*16), time);
+				}
+
+				if (Setting_ShowName == true) {
+					nvg::Text(xpos+20, ypos+(am*16), Text::StripOpenplanetFormatCodes(string(times[i]["Name"])));
+				}
+				nvg::FillColor(vec4(1,1,1,1));
+
+
+				if (Setting_ShowDelta == true) {
+					if (delta[i].Contains("+")) {
+						nvg::FillColor(vec4(1,0.5,0.5,1));
+					} else {
+						nvg::FillColor(vec4(0.5,0.5,1,1));
+					}
+					nvg::Text(xpos+20+namemax+timemax+8, ypos+(am*16), delta[i]);
+				}
+				nvg::FillColor(vec4(1,1,1,1));
+			}
+			UI::End();
+			return;
 		}
 
 		// table render
