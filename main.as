@@ -458,16 +458,21 @@ cm_time = ChampionMedals::GetCMTime();
 
 
 
+		bool type = true;
 		auto network = cast<CTrackManiaNetwork>(app.Network);
 
 		UI::SetNextWindowPos(Setting_X,Setting_Y);
-		int flags = UI::WindowFlags::NoTitleBar | UI::WindowFlags::NoCollapse | UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoDocking;
-		UI::Begin("m", flags);
 
-		auto pos = UI::GetWindowPos();
+		if (Setting_NVG == true && UI::IsOverlayShown() == false) {
+			type = false;
+		} else {
+			int flags = UI::WindowFlags::NoTitleBar | UI::WindowFlags::NoCollapse | UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoDocking;
+			UI::Begin("m", flags);
+
+			auto pos = UI::GetWindowPos();
 			Setting_X = int(pos.x);
 			Setting_Y = int(pos.y);
-
+		}
 
 
 		float besttime = -1;
@@ -491,12 +496,8 @@ cm_time = ChampionMedals::GetCMTime();
 			pb = besttime;
 		}
 
-
-
-		if (Setting_TrackNameVis) {
-			UI::Text(Text::StripFormatCodes(track.MapName));
-			UI::Text("\\$888By " + Text::StripFormatCodes(track.MapInfo.AuthorNickName));
-
+		if (Setting_NVG == true && UI::IsOverlayShown() == true) {
+			UI::Text(Icons::ArrowsAlt);
 		}
 
 		array<dictionary> times = {};
@@ -682,14 +683,18 @@ cm_time = ChampionMedals::GetCMTime();
 				}
 
 				int tde = (int(besttime)-int(times[i]["Time"]));
-				if (tde != 0) {
+				if (tde != 0 && int(times[i]["Time"]) > 0 && int(besttime) > 0) {
 					if (tde > 0) {
 						delta.InsertLast("+" + (int(times[i]["Time"]) > 0 ? Time::Format(tde) : "-:--.---"));
 					} else {
 						delta.InsertLast("" + (int(times[i]["Time"]) > 0 ? Time::Format(tde) : "-:--.---"));
 					}
 				} else {
-					delta.InsertLast("");
+					if (int(times[i]["Time"]) > 0 && int(besttime) > 0) {
+						delta.InsertLast("");
+					} else {
+						delta.InsertLast(" ");
+					}
 				}
 				if (Setting_ShowDelta == true) {
 					auto getBound3 = nvg::TextBounds(Text::StripFormatCodes(delta[i]));
@@ -699,20 +704,41 @@ cm_time = ChampionMedals::GetCMTime();
 				}
 			}
 
+			if (Setting_TrackNameVis == true) {
+				am += 2;
+			}
+
+			if (loading) {
+				am += 1;
+			}
+
 			int t = am*16;
 			am = -1;
 
 			float ypos = Setting_Y;
-			ypos += UI::GetWindowSize().y+15;
+			ypos += 22;
 
 			float xpos = Setting_X;
-			xpos += 20;
+			xpos += 8;
+
+
 
 			nvg::BeginPath();
 			nvg::Rect(xpos-8, ypos-20, namemax+timemax+deltamax+16+20, t+16);
 			nvg::FillColor(vec4(0,0,0,0.85));
 			nvg::Fill();
 			nvg::ClosePath();
+
+			if (Setting_TrackNameVis == true) {
+				am += 1;
+				nvg::FillColor(vec4(1,1,1,1));
+				nvg::Text(xpos, ypos+(am*16), Text::StripFormatCodes(track.MapName));
+
+				am += 1;
+				nvg::FillColor(vec4(0.5,0.5,0.5,1));
+				nvg::Text(xpos, ypos+(am*16), "By " + Text::StripFormatCodes(track.MapInfo.AuthorNickName));
+			}
+
 			nvg::FillColor(vec4(1,1,1,1));
 			for(uint i = 0; i < times.Length; i++) {
 				if (Setting_ShowNonCompleteTimes == false && int(times[i]["Time"]) <= 0) {
@@ -750,11 +776,27 @@ cm_time = ChampionMedals::GetCMTime();
 				}
 				nvg::FillColor(vec4(1,1,1,1));
 			}
-			UI::End();
+
+			if (loading) {
+				am += 1;
+				nvg::FillColor(vec4(1,1,1,1));
+				nvg::Text(xpos, ypos+(am*16), Icons::Refresh + " Loading Times...");
+			}
+
+			if (type == true) {
+				UI::End();
+			}
 			return;
 		}
 
-		// table render
+
+
+		// non-nvg render
+
+		if (Setting_TrackNameVis == true) {
+			UI::Text(Text::StripFormatCodes(track.MapName));
+			UI::Text("\\$888By " + Text::StripFormatCodes(track.MapInfo.AuthorNickName));
+		}
 
 		if (UI::BeginTable("table", cols, UI::TableFlags::SizingFixedFit)) {
 			for(uint i = 0; i < times.Length; i++) {
