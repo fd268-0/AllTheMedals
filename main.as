@@ -721,10 +721,18 @@ cm_time = ChampionMedals::GetCMTime();
 			float xpos = Setting_X;
 			xpos += 8;
 
+			auto max = nvg::TextBounds(Icons::Refresh + " Loading Times...");
+
+			if (Setting_TrackNameVis == true) {
+				auto titleS = nvg::TextBounds(Text::StripFormatCodes(track.MapName));
+				auto nameS = nvg::TextBounds("By " + Text::StripFormatCodes(track.MapInfo.AuthorNickName));
+
+				max = Math::Max(max, Math::Max(titleS.x, nameS.x));
+			}
 
 
 			nvg::BeginPath();
-			nvg::Rect(xpos-8, ypos-20, namemax+timemax+deltamax+16+20, t+16);
+			nvg::Rect(xpos-8, ypos-20, Math::Max(namemax+timemax+deltamax+16+20, max+20+16), t+16);
 			nvg::FillColor(vec4(0,0,0,0.85));
 			nvg::Fill();
 			nvg::ClosePath();
