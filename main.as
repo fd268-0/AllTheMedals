@@ -721,7 +721,7 @@ cm_time = ChampionMedals::GetCMTime();
 			float xpos = Setting_X;
 			xpos += 8;
 
-			auto max = nvg::TextBounds(Icons::Refresh + " Loading Times...");
+			auto max = nvg::TextBounds(Icons::Refresh + " Loading Times...").x;
 
 			if (Setting_TrackNameVis == true) {
 				auto titleS = nvg::TextBounds(Text::StripFormatCodes(track.MapName));
